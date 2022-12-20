@@ -6,6 +6,7 @@ const passport = require('passport');
 const mongoose = require('mongoose');
 require('./config/passport')(passport);
 
+
 // App Set up
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -22,11 +23,11 @@ mongoose.connect(MONGO_CONNECTION_STRING, { useNewUrlParser: true, useUnifiedTop
 const db = mongoose.connection;
 
 db.once('open', () => {
-    console.log(`Connected to MongoDB at HOST: ${db.host} and PORT: ${db.port}`);
+  console.log(`Connected to MongoDB at HOST: ${db.host} and PORT: ${db.port}`);
 });
 
 db.on('error', (error) => {
-    console.log(`Database Error: ${error}`);
+  console.log(`Database Error: ${error}`);
 })
 
 // API Routes
@@ -36,6 +37,8 @@ app.get('/', (req, res) => {
 
 app.use('/examples', require('./controllers/example'));
 app.use('/users', require('./controllers/user'));
+app.use('/search', require('./controllers/search'));
+app.use('/favorites', require('./controllers/favorites'));
 
 // Server
 const server = app.listen(PORT, () => console.log(`Server is running on PORT: ${PORT}`));

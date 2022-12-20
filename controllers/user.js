@@ -1,4 +1,6 @@
 // Imports
+const Favorite = require('../models/favorite');
+
 require('dotenv').config();
 const express = require('express');
 const router = express.Router();
@@ -6,6 +8,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const { JWT_SECRET } = process.env;
+const axios = require('axios');
 
 // DB Models
 const User = require('../models/user');
@@ -18,44 +21,44 @@ router.get('/test', (req, res) => {
 router.post('/signup', (req, res) => {
     // POST - adding the new user to the database
     console.log('===> Inside of /signup');
-    console.log('===> /register -> req.body',req.body);
+    console.log('===> /register -> req.body', req.body);
 
     User.findOne({ email: req.body.email })
-    .then(user => {
-        // if email already exists, a user will come back
-        if (user) {
-            // send a 400 response
-            return res.status(400).json({ message: 'Email already exists' });
-        } else {
-            // Create a new user
-            const newUser = new User({
-                name: req.body.name,
-                email: req.body.email,
-                password: req.body.password
-            });
+        .then(user => {
+            // if email already exists, a user will come back
+            if (user) {
+                // send a 400 response
+                return res.status(400).json({ message: 'Email already exists' });
+            } else {
+                // Create a new user
+                const newUser = new User({
+                    name: req.body.name,
+                    email: req.body.email,
+                    password: req.body.password
+                });
 
-            // Salt and hash the password - before saving the user
-            bcrypt.genSalt(10, (err, salt) => {
-                if (err) throw Error;
+                // Salt and hash the password - before saving the user
+                bcrypt.genSalt(10, (err, salt) => {
+                    if (err) throw Error;
 
-                bcrypt.hash(newUser.password, salt, (err, hash) => {
-                    if (err) console.log('==> Error inside of hash', err);
-                    // Change the password in newUser to the hash
-                    newUser.password = hash;
-                    newUser.save()
-                    .then(createdUser => res.json({ user: createdUser}))
-                    .catch(err => {
-                        console.log('error with creating new user', err);
-                        res.json({ message: 'Error occured... Please try again.'});
+                    bcrypt.hash(newUser.password, salt, (err, hash) => {
+                        if (err) console.log('==> Error inside of hash', err);
+                        // Change the password in newUser to the hash
+                        newUser.password = hash;
+                        newUser.save()
+                            .then(createdUser => res.json({ user: createdUser }))
+                            .catch(err => {
+                                console.log('error with creating new user', err);
+                                res.json({ message: 'Error occured... Please try again.' });
+                            });
                     });
                 });
-            });
-        }
-    })
-    .catch(err => { 
-        console.log('Error finding user', err);
-        res.json({ message: 'Error occured... Please try again.'})
-    })
+            }
+        })
+        .catch(err => {
+            console.log('Error finding user', err);
+            res.json({ message: 'Error occured... Please try again.' })
+        })
 });
 
 router.post('/login', async (req, res) => {
@@ -82,7 +85,7 @@ router.post('/login', async (req, res) => {
 
             jwt.sign(payload, JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
                 if (err) {
-                    res.status(400).json({ message: 'Session has endedd, please log in again'});
+                    res.status(400).json({ message: 'Session has endedd, please log in again' });
                 }
                 const legit = jwt.verify(token, JWT_SECRET, { expiresIn: 60 });
                 console.log('===> legit', legit);
@@ -118,5 +121,8 @@ router.get('/messages', passport.authenticate('jwt', { session: false }), async 
     res.json({ id, name, email, message: messageArray, sameUser });
 });
 
-// Exports
+
+
+
+
 module.exports = router;
